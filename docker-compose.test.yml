@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+  # Backend test container
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: taskmgr-backend-test
+    environment:
+      - APP_NAME=Task Manager Test
+      - APP_VERSION=1.0.0-test
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=true
+      - STORAGE_DIR=/test-data
+    volumes:
+      - ./tests/backend:/app/tests
+      - ./backend/app:/app/app
+      - test-data:/test-data
+    depends_on:
+      - postgres
+    command: pytest /app/tests -v --cov=app --cov-report=xml --cov-report=term --junitxml=/test-results/junit.xml
+
+  # Frontend test container
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+    container_name: taskmgr-frontend-test
+    environment:
+      - NODE_ENV=test
+      - VITEST=true
+    volumes:
+      - ./tests:/app/tests
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run test -- --run --coverage
+
+  # Integration test runner
+  integration-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.integration
+    container_name: taskmgr-integration-test
+    depends_on:
+      - backend
+      - frontend
+    environment:
+      - BACKEND_URL=http://backend:8000
+      - FRONTEND_URL=http://frontend:5173
+    volumes:
+      - ./tests/e2e:/app/tests/e2e
+      - ./data:/app/data
+    command: pytest /app/tests/e2e -v --html=/test-results/report.html
+
+  # PostgreSQL for integration tests
+  postgres:
+    image: postgres:15-alpine
+    container_name: taskmgr-postgres-test
+    environment:
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpass
+      - POSTGRES_DB=testdb
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  test-data:
+  postgres-test-data:

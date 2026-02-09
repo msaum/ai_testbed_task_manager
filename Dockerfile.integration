@@ -1,0 +1,26 @@
+# Integration test environment
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install --no-cache-dir pytest pytest-asyncio httpx
+
+# Copy test scripts
+COPY tests/e2e/ /app/tests/e2e/
+COPY tests/scripts/ /app/tests/scripts/
+
+# Create data directory
+RUN mkdir -p /app/data /app/test-results
+
+# Make scripts executable
+RUN chmod +x /app/tests/scripts/*.sh
+
+# Default command - run integration tests
+CMD ["pytest", "/app/tests/e2e", "-v", "--html=/app/test-results/report.html"]

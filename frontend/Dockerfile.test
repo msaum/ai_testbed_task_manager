@@ -1,0 +1,28 @@
+# Test environment for frontend
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies first for better caching
+COPY package*.json ./
+COPY frontend/package*.json ./frontend/
+
+# Install frontend dependencies
+RUN cd frontend && npm ci --only=production && cd ..
+
+# Install test dependencies
+RUN cd frontend && npm install --save-dev vitest @vitest/ui @testing-library/react @testing-library/jest-dom jsdom && cd ..
+
+# Copy application code
+COPY frontend/ ./frontend/
+
+# Create test directory
+RUN mkdir -p /app/tests
+
+# Set test environment
+ENV NODE_ENV=test
+ENV VITEST=true
+
+# Run tests
+CMD ["npm", "run", "test", "--", "--run"]

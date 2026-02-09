@@ -1,0 +1,23 @@
+# Backend test requirements
+# These are installed alongside the main requirements
+
+# Testing framework
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+
+# HTTP client for API testing
+httpx>=0.24.0
+
+# FastAPI testing utilities
+fastapi[standard]>=0.100.0
+
+# Coverage reporting
+coverage>=7.0.0
+
+# Type checking for tests
+mypy>=1.0.0
+types-pytest>=7.0.0
+
+# Optional: fixtures for database mocking
+# pytest-mock>=3.10.0
