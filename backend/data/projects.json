@@ -1,0 +1,36 @@
+{
+  "projects": [
+    {
+      "name": "Work",
+      "created_at": "2026-02-09 20:44:00.736927"
+    },
+    {
+      "name": "TestProject",
+      "created_at": "2026-02-09 20:45:29.750907"
+    },
+    {
+      "name": "E2E Test Project",
+      "created_at": "2026-02-09 20:52:05.701065"
+    },
+    {
+      "name": "Persistent Project",
+      "created_at": "2026-02-09 20:59:24.811471"
+    },
+    {
+      "name": "E2E Test Project 1770671521",
+      "created_at": "2026-02-09 21:12:01.167003"
+    },
+    {
+      "name": "Persistent Project 1770671521",
+      "created_at": "2026-02-09 21:12:01.203754"
+    },
+    {
+      "name": "E2E Test Project 1770671890",
+      "created_at": "2026-02-09 21:18:10.382352"
+    },
+    {
+      "name": "Persistent Project 1770671890",
+      "created_at": "2026-02-09 21:18:10.423117"
+    }
+  ]
+}

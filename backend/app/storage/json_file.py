@@ -61,13 +61,25 @@ class JSONFileStore(Generic[T]):
     def _parse_items(self, data: List[Dict[str, Any]]) -> List[T]:
         """Parse raw dictionary items into model instances."""
         items = []
+        if data is None:
+            return items
         for item in data:
             try:
+                # Handle legacy "active" status -> "pending"
+                if isinstance(item, dict):
+                    item = self._normalize_item(item)
                 items.append(self.model_class(**item))
             except Exception as e:
                 # Skip invalid items during read
                 continue
         return items
+
+    def _normalize_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize item data to match current schema."""
+        if isinstance(item, dict) and item.get('status') == 'active':
+            item = item.copy()
+            item['status'] = 'pending'
+        return item
 
     def get_all(self) -> List[T]:
         """Get all items from the store."""

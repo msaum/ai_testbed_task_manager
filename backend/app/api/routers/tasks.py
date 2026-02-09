@@ -147,7 +147,7 @@ async def update_task_status(task_id: str, status: str):
         404: If the task is not found
         400: If the status value is invalid
     """
-    valid_statuses = ["active", "completed"]
+    valid_statuses = ["pending", "in_progress", "completed"]
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
 

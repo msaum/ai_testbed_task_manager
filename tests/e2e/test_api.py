@@ -13,7 +13,7 @@ import httpx
 from datetime import datetime
 from typing import Dict, Any
 
-BASE_URL = "http://localhost:8000/api/v1"
+BASE_URL = "http://localhost:8000"
 
 
 @pytest.fixture(scope="module")
@@ -55,7 +55,7 @@ class TestTasks:
 
     def test_get_all_tasks_empty(self, client: httpx.Client):
         """Test getting tasks when none exist."""
-        response = client.get("/tasks")
+        response = client.get("/api/v1/tasks")
         assert response.status_code == 200
 
         data = response.json()
@@ -72,15 +72,15 @@ class TestTasks:
             "project": "Inbox"
         }
 
-        response = client.post("/tasks", json=task_data)
-        assert response.status_code == 200
+        response = client.post("/api/v1/tasks", json=task_data)
+        assert response.status_code == 201
 
         data = response.json()
         assert data["title"] == task_data["title"]
         assert data["notes"] == task_data["notes"]
         assert data["priority"] == "high"
         assert "id" in data
-        assert data["status"] == "active"
+        assert data["status"] == "pending"
 
         return data["id"]
 
@@ -88,11 +88,11 @@ class TestTasks:
         """Test getting a specific task by ID."""
         # First create a task
         task_data = {"title": "Get By ID Test"}
-        create_response = client.post("/tasks", json=task_data)
+        create_response = client.post("/api/v1/tasks", json=task_data)
         task_id = create_response.json()["id"]
 
         # Then retrieve it
-        response = client.get(f"/tasks/{task_id}")
+        response = client.get(f"/api/v1/tasks/{task_id}")
         assert response.status_code == 200
 
         data = response.json()
@@ -103,12 +103,12 @@ class TestTasks:
         """Test updating an existing task."""
         # Create a task
         task_data = {"title": "Original Title"}
-        create_response = client.post("/tasks", json=task_data)
+        create_response = client.post("/api/v1/tasks", json=task_data)
         task_id = create_response.json()["id"]
 
         # Update it
         update_data = {"title": "Updated Title", "status": "completed"}
-        response = client.put(f"/tasks/{task_id}", json=update_data)
+        response = client.put(f"/api/v1/tasks/{task_id}", json=update_data)
         assert response.status_code == 200
 
         data = response.json()
@@ -119,12 +119,12 @@ class TestTasks:
         """Test deleting a task."""
         # Create a task
         task_data = {"title": "To Be Deleted"}
-        create_response = client.post("/tasks", json=task_data)
+        create_response = client.post("/api/v1/tasks", json=task_data)
         task_id = create_response.json()["id"]
 
         # Delete it
-        response = client.delete(f"/tasks/{task_id}")
-        assert response.status_code == 200
+        response = client.delete(f"/api/v1/tasks/{task_id}")
+        assert response.status_code == 204
 
         # Verify it's gone
         get_response = client.get(f"/tasks/{task_id}")
@@ -132,22 +132,22 @@ class TestTasks:
 
     def test_toggle_task_status(self, client: httpx.Client):
         """Test toggling a task's completion status."""
-        # Create an active task
-        task_data = {"title": "Toggle Test", "status": "active"}
-        create_response = client.post("/tasks", json=task_data)
+        # Create a task
+        task_data = {"title": "Toggle Test"}
+        create_response = client.post("/api/v1/tasks", json=task_data)
         task_id = create_response.json()["id"]
 
-        # Toggle to completed
-        response = client.post(f"/tasks/{task_id}/toggle")
+        # Update to completed
+        response = client.patch(f"/api/v1/tasks/{task_id}/status?status=completed")
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "completed"
 
-        # Toggle back to active
-        response = client.post(f"/tasks/{task_id}/toggle")
+        # Update back to pending (the valid status is "pending", not "active")
+        response = client.patch(f"/api/v1/tasks/{task_id}/status?status=pending")
         assert response.status_code == 200
-        assert response.json()["status"] == "active"
+        assert response.json()["status"] == "pending"
 
 
 class TestProjects:
@@ -155,7 +155,7 @@ class TestProjects:
 
     def test_get_all_projects(self, client: httpx.Client):
         """Test getting all projects."""
-        response = client.get("/projects")
+        response = client.get("/api/v1/projects")
         assert response.status_code == 200
 
         data = response.json()
@@ -163,25 +163,27 @@ class TestProjects:
 
     def test_create_project(self, client: httpx.Client):
         """Test creating a new project."""
-        project_data = {"name": "E2E Test Project"}
+        import time
+        project_data = {"name": f"E2E Test Project {int(time.time())}"}
 
-        response = client.post("/projects", json=project_data)
-        assert response.status_code == 200
+        response = client.post("/api/v1/projects", json=project_data)
+        assert response.status_code == 201
 
         data = response.json()
-        assert data["name"] == "E2E Test Project"
+        assert data["name"] == project_data["name"]
         assert "created_at" in data
 
     def test_delete_project(self, client: httpx.Client):
         """Test deleting a project."""
+        import time
         # Create a project
-        project_data = {"name": "To Be Deleted Project"}
-        create_response = client.post("/projects", json=project_data)
+        project_data = {"name": f"To Be Deleted {int(time.time())}"}
+        create_response = client.post("/api/v1/projects", json=project_data)
         project_name = create_response.json()["name"]
 
         # Delete it
-        response = client.delete(f"/projects/{project_name}")
-        assert response.status_code == 200
+        response = client.delete(f"/api/v1/projects/{project_name}")
+        assert response.status_code == 204
 
 
 class TestSettings:
@@ -189,7 +191,7 @@ class TestSettings:
 
     def test_get_settings(self, client: httpx.Client):
         """Test getting application settings."""
-        response = client.get("/settings")
+        response = client.get("/api/v1/settings")
         assert response.status_code == 200
 
         data = response.json()
@@ -200,7 +202,7 @@ class TestSettings:
         """Test updating application settings."""
         update_data = {"theme": "dark", "sort_order": "priority"}
 
-        response = client.put("/settings", json=update_data)
+        response = client.put("/api/v1/settings", json=update_data)
         assert response.status_code == 200
 
         data = response.json()
@@ -213,26 +215,26 @@ class TestErrorHandling:
 
     def test_get_nonexistent_task(self, client: httpx.Client):
         """Test getting a non-existent task returns 404."""
-        response = client.get("/tasks/nonexistent-id")
+        response = client.get("/api/v1/tasks/nonexistent-id")
         assert response.status_code == 404
 
     def test_delete_nonexistent_task(self, client: httpx.Client):
         """Test deleting a non-existent task returns 404."""
-        response = client.delete("/tasks/nonexistent-id")
+        response = client.delete("/api/v1/tasks/nonexistent-id")
         assert response.status_code == 404
 
     def test_create_task_with_invalid_data(self, client: httpx.Client):
         """Test creating a task with invalid data returns 422."""
         invalid_data = {"title": ""}  # Empty title is invalid
 
-        response = client.post("/tasks", json=invalid_data)
+        response = client.post("/api/v1/tasks", json=invalid_data)
         # Should return 422 for validation error
         assert response.status_code == 422
 
     def test_update_nonexistent_task(self, client: httpx.Client):
         """Test updating a non-existent task returns 404."""
         update_data = {"title": "Updated"}
-        response = client.put("/tasks/nonexistent-id", json=update_data)
+        response = client.put("/api/v1/tasks/nonexistent-id", json=update_data)
         assert response.status_code == 404
 
 
@@ -244,7 +246,7 @@ class TestPerformance:
         import time
 
         start = time.time()
-        response = client.get("/tasks")
+        response = client.get("/api/v1/tasks")
         end = time.time()
 
         elapsed = end - start

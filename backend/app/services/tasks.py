@@ -47,7 +47,14 @@ class TaskService:
         tasks = self._store.get_all()
 
         if status:
-            tasks = [t for t in tasks if t.status == status]
+            # Map frontend status to backend status
+            status_map = {
+                'pending': 'pending',
+                'in_progress': 'in_progress',
+                'completed': 'completed'
+            }
+            backend_status = status_map.get(status, status)
+            tasks = [t for t in tasks if t.status == backend_status]
         if priority:
             tasks = [t for t in tasks if t.priority == priority]
         if project:

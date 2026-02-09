@@ -12,7 +12,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, Any
 
-BASE_URL = os.getenv("BACKEND_URL", "http://localhost:8000/api/v1")
+BASE_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 
 @pytest.fixture(scope="function")
@@ -44,7 +44,7 @@ class TestPersistence:
         }
 
         response = client.post("/api/v1/tasks", json=task_data)
-        assert response.status_code == 200
+        assert response.status_code == 201
         task_id = response.json()["id"]
 
         # Check that data file was created
@@ -55,12 +55,12 @@ class TestPersistence:
         with open(tasks_file, 'r') as f:
             data = json.load(f)
 
-        assert "items" in data
-        assert len(data["items"]) >= 1
+        assert "tasks" in data
+        assert len(data["tasks"]) >= 1
 
         # Verify the task data is in the file
         found = False
-        for item in data["items"]:
+        for item in data["tasks"]:
             if item.get("title") == "Persistent Task 1":
                 found = True
                 break
@@ -69,12 +69,13 @@ class TestPersistence:
 
     def test_projects_persist_after_restart(self, data_dir):
         """Test that projects persist after application restart."""
+        import time
         client = httpx.Client(base_url=BASE_URL, timeout=10.0)
 
-        project_data = {"name": "Persistent Project"}
+        project_data = {"name": f"Persistent Project {int(time.time())}"}
 
         response = client.post("/api/v1/projects", json=project_data)
-        assert response.status_code == 200
+        assert response.status_code == 201
 
         # Check projects file
         projects_file = data_dir / "projects.json"
@@ -83,11 +84,11 @@ class TestPersistence:
         with open(projects_file, 'r') as f:
             data = json.load(f)
 
-        assert "items" in data
+        assert "projects" in data
 
         # Verify project data
-        names = [item.get("name") for item in data.get("items", [])]
-        assert "Persistent Project" in names
+        names = [item.get("name") for item in data.get("projects", [])]
+        assert project_data["name"] in names
 
     def test_settings_persist_after_restart(self, data_dir):
         """Test that settings persist after application restart."""
@@ -137,8 +138,8 @@ class TestJSONFileOperations:
 
         # Try to parse - should not raise
         data = json.loads(content)
-        assert "items" in data
-        assert len(data["items"]) >= 10
+        assert "tasks" in data
+        assert len(data["tasks"]) >= 10
 
     def test_corrupt_json_recovery(self, data_dir):
         """
@@ -194,11 +195,11 @@ class TestFileStructure:
 
         # Verify structure
         assert isinstance(data, dict)
-        assert "items" in data
-        assert isinstance(data["items"], list)
+        assert "tasks" in data
+        assert isinstance(data["tasks"], list)
 
-        if data["items"]:
-            task = data["items"][0]
+        if data["tasks"]:
+            task = data["tasks"][0]
             required_fields = ["id", "title", "notes", "status", "priority",
                              "project", "created_at", "updated_at"]
             for field in required_fields:
@@ -212,11 +213,11 @@ class TestFileStructure:
             data = json.load(f)
 
         assert isinstance(data, dict)
-        assert "items" in data
-        assert isinstance(data["items"], list)
+        assert "projects" in data
+        assert isinstance(data["projects"], list)
 
-        if data["items"]:
-            project = data["items"][0]
+        if data["projects"]:
+            project = data["projects"][0]
             assert "name" in project
             assert "created_at" in project
 

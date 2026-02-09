@@ -22,7 +22,7 @@ class TestTaskModel:
         assert task.id is not None  # UUID generated
         assert task.title == "Test Task"
         assert task.notes == ""
-        assert task.status == "active"  # Default
+        assert task.status == "pending"  # Default
         assert task.priority == "medium"  # Default
         assert task.due_date is None
         assert task.project == "Inbox"  # Default
@@ -35,7 +35,7 @@ class TestTaskModel:
         task = Task(
             title="Complete Project",
             notes="Finish the API design",
-            status="active",
+            status="pending",
             priority="high",
             due_date=due_date,
             project="Work"
@@ -43,7 +43,7 @@ class TestTaskModel:
 
         assert task.title == "Complete Project"
         assert task.notes == "Finish the API design"
-        assert task.status == "active"
+        assert task.status == "pending"
         assert task.priority == "high"
         assert task.due_date == due_date
         assert task.project == "Work"
