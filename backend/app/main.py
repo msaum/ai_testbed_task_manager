@@ -13,8 +13,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
-from app.api.routers import tasks, projects, settings_api
+from app.core import config as app_config
+from app.api.routers import tasks, projects, settings
 
 
 def create_application() -> FastAPI:
@@ -25,9 +25,9 @@ def create_application() -> FastAPI:
         Configured FastAPI application instance
     """
     application = FastAPI(
-        title=settings.APP_NAME,
-        description=settings.APP_DESCRIPTION,
-        version=settings.APP_VERSION,
+        title=app_config.settings.APP_NAME,
+        description=app_config.settings.APP_DESCRIPTION,
+        version=app_config.settings.APP_VERSION,
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
@@ -36,7 +36,7 @@ def create_application() -> FastAPI:
     # Configure CORS
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.ALLOWED_ORIGINS,
+        allow_origins=app_config.settings.ALLOWED_ORIGINS,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -46,7 +46,7 @@ def create_application() -> FastAPI:
     # Include routers
     application.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
     application.include_router(projects.router, prefix="/api/v1/projects", tags=["projects"])
-    application.include_router(settings_api.router, prefix="/api/v1/settings", tags=["settings"])
+    application.include_router(settings.router, prefix="/api/v1/settings", tags=["settings"])
 
     return application
 
@@ -65,8 +65,8 @@ async def health_check():
     """
     return {
         "status": "healthy",
-        "service": settings.APP_NAME,
-        "version": settings.APP_VERSION,
+        "service": app_config.settings.APP_NAME,
+        "version": app_config.settings.APP_VERSION,
     }
 
 
@@ -79,8 +79,8 @@ async def root():
         API metadata and documentation links
     """
     return {
-        "name": settings.APP_NAME,
-        "version": settings.APP_VERSION,
+        "name": app_config.settings.APP_NAME,
+        "version": app_config.settings.APP_VERSION,
         "docs": "/docs",
         "health": "/health",
     }
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "app.main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG,
+        host=app_config.settings.HOST,
+        port=app_config.settings.PORT,
+        reload=app_config.settings.DEBUG,
     )

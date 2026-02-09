@@ -7,9 +7,9 @@ ENV NODE_ENV=production
 # Create working directory
 WORKDIR /app
 
-# Install dependencies
+# Install all dependencies (including dev for build)
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --include=dev && npm cache clean --force
 
 # Copy source
 COPY . .
