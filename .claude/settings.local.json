@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json.schema.store/claude-code-settings.json",
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "defaultMode": "bypassPermissions",
     "allow": [
@@ -19,7 +19,10 @@
       "Task(*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(git push)",
+      "Bash(npm create:*)",
+      "Bash(npm install)"
     ]
   },
   "hooks": {
